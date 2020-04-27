@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StableBall - KeltaKing</title>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+</head>
+<body>
+    
+    <div class="w3-content w3-image w3-padding-32 w3-margin-top" style="max-width:550px;height:700px">
+        <div class="w3-center" id="score">0</div>
+        <center><button class="w3-button w3-blue w3-hover-blue w3-margin" onclick="start()" id="start">Start</button>
+        <button class="w3-button w3-blue w3-hover-blue w3-margin" onclick="restart()" style="display:none;" id="restart">Restart</button></center>
+        <canvas height="700" width="600" class="w3-image w3-white w3-border" id="can"></canvas>
+        
+        <div class="w3-margin w3-center">
+            <button class="w3-button w3-hover-green w3-blue w3-left" onclick="moveLeft(paddle)"> Left </button>
+            <button class="w3-button w3-hover-green w3-blue w3-center" onclick="stay(paddle)"> Stop </button>
+            <button class="w3-button w3-hover-green w3-blue w3-right" onclick="moveRight(paddle)">Right</button>
+        </div>
+    </div>
+    <script>
+        var canvas = document.getElementById('can');
+        var ctx = canvas.getContext('2d');
+    </script>
+    <script src="../DrawFunctions/draw.js"></script>
+    <script>
+        
+        //classes
+        let score = 0;
+        let gm = 0;
+        class move{
+            constructor(allow = true) {
+                this.allow = allow;
+            }
+            
+            movePaddle = (obj) => {
+                if(this.allow){
+                    if(obj.rl == 1){
+                        obj.x+=10;
+                    }
+                    else if(obj.rl == 2){
+                        obj.x-=10;
+                    }
+                    else{
+                        //do nothing
+                    } 
+                    
+                    //wall effect
+                    if(obj.x < 0){
+                        obj.x = 0;
+                    }
+                    else if(obj.x > (600-obj.width)){
+                        obj.x = (600-obj.width);
+                    }
+                    
+                }
+            }
+            
+            moveBall = (obj) => {
+                
+                if(this.allow){
+                    
+                    obj.x += obj.dx;
+                    obj.y += obj.dy;
+                    
+                    //wall effect
+                    if(obj.y == 0)
+                    {
+                        obj.y = 40;
+                    }
+                    
+                    if((obj.x + obj.dx + obj.radius) > 600 || (obj.x + obj.dx < obj.radius))
+                    {
+                        obj.dx = -obj.dx;
+                    }
+                    
+                    if((obj.y + obj.dy < obj.radius))
+                    {
+                        obj.dy = -obj.dy;
+                    }
+                    
+                    if(obj.y + obj.dy > canvas.height)
+                    {
+                        obj.dy = -obj.dy;
+                    }
+                    
+                    
+                }
+            }
+            
+            balanceBall = (paddle, ball) => {
+                let score_display = document.getElementById('score');
+                
+                /*if((ball.y + ball.dy + ball.radius >= paddle.y) && (ball.x + ball.dx > paddle.x) && (ball.x + ball.dx < paddle.x + paddle.width)){
+                    ball.dy = -ball.dy;
+                }
+                else if((ball.y + ball.radius > paddle.y) && (ball.y - ball.radius < paddle.y + paddle.height)){
+                    ball.dx = -ball.dx;
+                }*/
+                if((ball.y + ball.dy >= paddle.y-20) && (ball.y + ball.dy <= paddle.y + paddle.height-20) && (ball.x +ball.dx +20 > paddle.x) && (ball.x + ball.dx - 20 < paddle.x + paddle.width)) {
+                    
+                    ball.dy = -ball.dy;
+                    score+=3;
+                    score_display.innerHTML = score;
+                    
+                } 
+                else if(ball.y + ball.dy > canvas.height-ball.radius){
+                    
+                    alert("your score: "+score);
+                    score = 0;
+                    score_display.innerHTML = score;
+                    clearInterval(gm);
+                    s_button.style.display = 'block'
+                }
+           }
+        }
+        
+        
+        class Random {
+            
+            constructor(allow = true){
+                this.allow = allow;
+            }
+            
+            generateRandom = () => {
+                return Math.floor(Math.random() * 500 + 50);
+            }
+            
+        }
+        
+        
+        //objects
+        let dr = new Drawing(true);
+        let mv = new move(true);
+        let rand = new Random(true);
+        let ball = {
+            x:rand.generateRandom(),
+            y:50,
+            dx:10,
+            dy:10,
+            radius:30
+        };
+        let paddle = {
+            x:(canvas.width-100)/2,
+            y:650,
+            height:20,
+            width:100,
+            rl:0 //0 for stable 1 for right and 2 for left
+        };
+        
+        
+        
+        
+        //functions
+        let moveLeft = (obj) =>{
+            obj.rl = 2;
+        }
+        
+        let moveRight = (obj) =>{
+            obj.rl = 1;
+        }
+        
+        let stay = (obj) => {
+            obj.rl = 0;
+        }
+        
+        
+        //inbuilt functions
+        document.addEventListener('keydown', function(event) 
+        {
+        //left
+            if(event.keyCode == 37) 
+            {
+                paddle.rl = 2;
+            }
+          
+        //right
+            else if(event.keyCode == 39) 
+            {
+                paddle.rl = 1;
+            }
+        //stop
+            else if(event.keyCode == 32) 
+            {
+                paddle.rl = 0;
+            }
+        });
+        
+        let restart = () =>{
+            score = 0;
+            ball.x=rand.generateRandom();
+            ball.y=50;
+            paddle.rl = 0;
+            gm = setInterval( () => {
+                s_button.style.display = 'none';
+                ctx.clearRect(0, 0, 600, 700);
+                dr.drawRect(paddle.x, paddle.y, paddle.width, paddle.height);
+                dr.drawCircle(ball.x, ball.y, ball.radius, "blue", "blue");
+                mv.movePaddle(paddle);
+                mv.moveBall(ball);
+                mv.balanceBall(paddle, ball);
+            },20);
+        }
+        
+        let s_button = document.getElementById('restart');
+        let start_button = document.getElementById('start');
+        
+        let start = () => {
+            gm = setInterval( () => {
+                s_button.style.display = 'none';
+                start_button.style.display = 'none';
+                ctx.clearRect(0, 0, 600, 700);
+                dr.drawRect(paddle.x, paddle.y, paddle.width, paddle.height);
+                dr.drawCircle(ball.x, ball.y, ball.radius, "blue", "blue");
+                mv.movePaddle(paddle);
+                mv.moveBall(ball);
+                mv.balanceBall(paddle, ball);
+            },20);
+        }
+        
+        
+    </script>
+</body>
